@@ -5,6 +5,7 @@ Created on Mon Mar  2 15:07:16 2020
 @author: flo-r
 """
 
+import re
 import numpy as np
 from nltk import Nonterminal
 from PCFG import PCFG_module
@@ -89,33 +90,6 @@ class CYK_module():
                             self.back[l, s, id_l, 0] = p
                             self.back[l, s, id_l, 1] = int(id_r1)
                             self.back[l, s, id_l, 2] = int(id_r2)
-        '''
-        for l in range(1, n):
-            for s in range(n-l): #range(n-l+1)
-                for p in range(l): #range(l-1)
-                    for nt1 in self.PCFG.nonterminals:
-                        for nt2 in self.PCFG.nonterminals:
-                        
-                            prod_list = self.PCFG.grammar.productions(lhs=nt1, rhs=nt2)
-                            
-                            if len(prod_list) == 0:
-                                continue
-                                
-                            for prod in prod_list:
-                                nt3 = prod.rhs()[1]
-                                p1 = prod.prob()
-                                p2 = self.P[p, s, self.PCFG.nonter2id[nt2]]
-                                p3 = self.P[l-p, s+p, self.PCFG.nonter2id[nt3]]
-                                p4 = self.P[l, s, self.PCFG.nonter2id[nt1]]
-                                prob_split = p1 * p2 * p3
-                                
-                                if (p2 > 0) & (p3 > 0) & (p4 < prob_split):
-                                    print("in if")
-                                    self.P[l, s, self.PCFG.nonter2id[nt1]] = prob_split
-                                    self.back[l, s, self.PCFG.nonter2id[nt1], 0] = p
-                                    self.back[l, s, self.PCFG.nonter2id[nt1], 1] = self.PCFG.nonter2id[nt2]
-                                    self.back[l, s, self.PCFG.nonter2id[nt1], 2] = self.PCFG.nonter2id[nt3]
-        '''
     
     
     # Build parsing list recursively
@@ -131,7 +105,7 @@ class CYK_module():
             nt_left = str(self.PCFG.nonterminals[nt_left_id])
             nt_right = str(self.PCFG.nonterminals[nt_right_id])
     
-            return [[nt_left, self.recursive_parsing(s, p, nt_left_id, tokens)],
+            return [[nt_left, self.recursive_parsing(p, s, nt_left_id, tokens)],
                     [nt_right, self.recursive_parsing(l - p - 1, s + p + 1, nt_right_id, tokens)]]
     
     
@@ -152,7 +126,7 @@ class CYK_module():
             
     
     # Parse a sentence to its bracketed form
-    def parse_sentence(self, sentence):
+    def parse_sentence(self, sentence, cor1=True, cor2=True):
     
         tokens = sentence.split()
         n = len(tokens)
@@ -174,5 +148,43 @@ class CYK_module():
             else:
                 nt = self.PCFG.POS_from_word(candidate)
                 parsing_list = "(" + nt + " " + tokens[0] + ")"
-    
-        return "( (SENT " + self.reformat_parsing(parsing_list) + "))"
+        #return(parsing_list)
+        
+        # Get string from the parsed list
+        output = self.reformat_parsing(parsing_list)
+                    
+        # Correct created symbols due to CNF : delete what comes after '|'
+        output = re.sub('\|[^>]+>', '', output)
+        
+       # Correct merge due to unit rool : (A&&B w) -> (A (B w))
+        if cor1:
+            count = 0
+            for i in range(2, len(output)):
+                if i < len(output)-1 and output[i] == '&' and output[i+1] == '&':
+                    output = output[:i] + ' (' + output[i+2:]
+                    count += 1
+                elif output[i] == ')' and count > 0:
+                    output = output[:i+1] + count*')' + output[i+1:]
+                    count = 0
+        
+        # Remove artificial 'SENT' tokens with their additive brackets
+        if cor2:
+            output = output.replace('SENT ', '')
+            count_del = 0
+            count_open = 0
+            count_close = 0
+            for i in range(len(output)):                
+                if i < len(output)-1 and output[i] == '(' and output[i+1] == '(':
+                    output = output[:i+1] + output[i+2:]
+                    count_del += 1
+                    count_open += 1
+                elif i < len(output) and output[i] == '(' and count_del > 0:
+                    count_open += 1
+                elif i < len(output) and output[i] == ')' and count_del > 0:
+                    count_close += 1
+                if count_close > count_open:
+                    output = output[:i-1] + output[i:]
+                    count_del -= 1
+                    count_close -= 1
+        
+        return "( (SENT " + output + "))"

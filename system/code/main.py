@@ -6,8 +6,7 @@ Created on Tue Mar  3 10:19:43 2020
 """
 
 from CYK import CYK_module
-
-# https://github.com/deloroy/Speech-NLP/tree/master/NLP%20Practical%20-%20Probabilistic%20parsing%20system%20for%20French
+from PYEVALB import scorer, parser
 
 
 # Paths to data
@@ -26,24 +25,38 @@ CYK = CYK_module(bracketed_corpus_path,
 
 # Read test data
 with open(test_input_path, 'r') as f:
-    input_test = f.read().lower().splitlines()
-with open(test_input_path, 'r') as f:
-    input_test = f.read().lower().splitlines()
+    input_test = f.read().splitlines()
+with open(test_output_path, 'r') as f:
+    output_test = f.read().splitlines()
 
-tests = []
-for i, sentence in enumerate(input_test):
-    if i % 10 == 0:
-        print("Sentence " + str(i) + " over " + str(len(input_test)))
-    tests.append(CYK.parse_sentence(sentence))
 
 '''
-a = CYK.PCFG.nonterminals
-a = [str(elt) for elt in a]
-a.sort()
-a
+# Run through test set
+tests = []
+for i, sentence in enumerate(input_test):
+    print(i)
+    tests.append(CYK.parse_sentence(sentence))
+'''
 
-from nltk import induce_pcfg, Nonterminal
-nt1 = Nonterminal('NP')
-nt2 = Nonterminal('ADJWH')
-CYK.PCFG.grammar.productions(lhs=nt1, rhs=nt2)
+
+# Evalb
+
+gold = output_test[0][2:-1]
+test = CYK.parse_sentence(input_test[0])[2:-1]
+
+gold_tree = parser.create_from_bracket_string(gold)
+test_tree = parser.create_from_bracket_string(test[:-2])
+#test_tree = parser.create_from_bracket_string(test[:-2])
+
+result = scorer.Scorer().score_trees(gold_tree, test_tree)
+
+print('Recall =' + str(result.recall))
+print('Precision =' + str(result.prec))
+
+'''
+gold_path = 'gold_corpus.txt'
+test_path = 'test_corpus.txt'
+result_path = 'result.txt'
+
+scorer.evalb(gold_path, test_path, result_path)
 '''
