@@ -20,12 +20,12 @@ class CYK_module():
                  embeddings_path='../data/polyglot-fr.pkl'):
         
         print('')
-        print('Building PCFG')
+        print('Building PCFG ...')
         self.PCFG = PCFG_module(bracketed_corpus_path)
         print('Done')
         
         print('')
-        print('Building OOV module')
+        print('Building OOV module ...')
         self.OOV = OOV_module(train_corpus_path,
                               embeddings_path)
         print('Done')
@@ -110,7 +110,7 @@ class CYK_module():
     
     
     # Transform parsing list to final format
-    def reformat_parsing(self, parsing_list):
+    def list_to_string(self, parsing_list):
     
         if type(parsing_list) == str:
             return parsing_list
@@ -120,13 +120,13 @@ class CYK_module():
             for parsing in parsing_list:
                 root = parsing[0]
                 parsing_substring = parsing[1]
-                string = string + "(" + root + " " + self.reformat_parsing(parsing_substring) + ")" + " "
+                string = string + "(" + root + " " + self.list_to_string(parsing_substring) + ")" + " "
             string = string[:-1]
             return string
             
     
     # Parse a sentence to its bracketed form
-    def parse_sentence(self, sentence, cor1=True, cor2=True):
+    def parse_sentence(self, sentence, cor1=True, cor2=True, cor3=True):
     
         tokens = sentence.split()
         n = len(tokens)
@@ -151,13 +151,32 @@ class CYK_module():
         #return(parsing_list)
         
         # Get string from the parsed list
-        output = self.reformat_parsing(parsing_list)
+        output = self.list_to_string(parsing_list)
                     
-        # Correct created symbols due to CNF : delete what comes after '|'
-        output = re.sub('\|[^>]+>', '', output)
+        # Delete created symbols containing '|' and delete closing brackets
+        #output = re.sub('\|[^>]+>', '', output)
+        if cor1:
+            # remove pattern + opening bracket
+            output = re.sub(r'([^\s]+)+\|+([^\s]+)', '', output)
+            # remove extra white spaces
+            output = re.sub(' +', ' ', output)
+            count_close = 0
+            count_open = 0
+            i=0
+            #delete extra cloing brackets
+            while i < len(output):                
+                if output[i] == '(':
+                    count_open += 1
+                elif output[i] == ')':
+                    count_close += 1
+                if count_close > count_open:
+                    output = output[:i-1] + output[i:]
+                    count_close -= 1
+                else:
+                    i += 1
         
        # Correct merge due to unit rool : (A&&B w) -> (A (B w))
-        if cor1:
+        if cor2:
             count = 0
             for i in range(2, len(output)):
                 if i < len(output)-1 and output[i] == '&' and output[i+1] == '&':
@@ -168,23 +187,21 @@ class CYK_module():
                     count = 0
         
         # Remove artificial 'SENT' tokens with their additive brackets
-        if cor2:
-            output = output.replace('SENT ', '')
-            count_del = 0
-            count_open = 0
+        if cor3:
+            output = output.replace('(SENT ', '')
             count_close = 0
-            for i in range(len(output)):                
-                if i < len(output)-1 and output[i] == '(' and output[i+1] == '(':
-                    output = output[:i+1] + output[i+2:]
-                    count_del += 1
+            count_open = 0
+            i=0
+            #delete extra cloing brackets
+            while i < len(output):                
+                if output[i] == '(':
                     count_open += 1
-                elif i < len(output) and output[i] == '(' and count_del > 0:
-                    count_open += 1
-                elif i < len(output) and output[i] == ')' and count_del > 0:
+                elif output[i] == ')':
                     count_close += 1
                 if count_close > count_open:
                     output = output[:i-1] + output[i:]
-                    count_del -= 1
                     count_close -= 1
+                else:
+                    i += 1
         
         return "( (SENT " + output + "))"

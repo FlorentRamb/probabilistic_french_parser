@@ -34,9 +34,9 @@ class OOV_module():
         self.voc.sort()
         self.word2id = {w:i for (i, w) in enumerate(self.voc)}
         
-        # Language model
+        # Language model on log scale
         self.words_prob = np.zeros(len(self.voc)) # words occurence probability
-        self.bigram_matrix = np.ones((len(self.voc), len(self.voc) + 1)) # smoothed bigram matrix
+        self.bigram_matrix = np.ones((len(self.voc) + 1, len(self.voc) + 1)) # smoothed bigram matrix
         for seq in self.input_train:
             seq = seq.split()
             self.words_prob[self.word2id[seq[0]]] += 1
@@ -46,12 +46,14 @@ class OOV_module():
                     self.words_prob[self.word2id[seq[k]]] += 1
                     self.bigram_matrix[self.word2id[seq[k]],
                                        self.word2id[seq[k-1]] + 1] += 1
+            # case when word is last in sequence
+            self.bigram_matrix[-1, self.word2id[seq[-1]]] += 1
         # normalize column-wise to get probabilities
         self.bigram_matrix /= self.bigram_matrix.sum(axis=0)
-        self.bigram_matrix = np.log(self.bigram_matrix)
+        self.bigram_matrix = np.log(self.bigram_matrix) # log sacle
         # normalize to get probabilities
         self.words_prob /= self.words_prob.sum()
-        self.words_prob = np.log(self.words_prob)
+        self.words_prob = np.log(self.words_prob) # log sacle
         
         # Get embeddings of words in the train set
         self.train_word_emb = dict()
@@ -155,5 +157,5 @@ class OOV_module():
             #return(self.PCFG.POS_from_word(candidate_list[-1][0]))
         
         # If none of these methods is successful return None
-        print("OOV failure: did not find any close word for [" + w + "]")
+        print("OOV failure: did not find any close word for [" + word + "]")
         return(None)

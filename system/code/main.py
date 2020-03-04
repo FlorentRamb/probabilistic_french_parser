@@ -6,15 +6,23 @@ Created on Tue Mar  3 10:19:43 2020
 """
 
 from CYK import CYK_module
-from PYEVALB import scorer, parser
+import argparse
+import time
 
+'''
+# Read and parse arguments
+arg = argparse.ArgumentParser( description='Basic run script for the Parser' )
+arg.add_argument( '--input_file', type=str, required=True, default='../data/input_test', help='Path to tokenized text to parse' )
+arg.add_argument( '--output_file', type=str, required=False, default='../output/parsed_test', help='Path to write the output parsed text' )
+arg = arg.parse_args()
+'''
 
 # Paths to data
 bracketed_corpus_path = '../data/output_train'
 train_corpus_path = '../data/input_train'
 embeddings_path = '../data/polyglot-fr.pkl'
 test_input_path = '../data/input_test'
-test_output_path = '../data/output_test'
+# test_output_path = '../data/output_test'
 
 
 # Build CYK
@@ -24,39 +32,30 @@ CYK = CYK_module(bracketed_corpus_path,
 
 
 # Read test data
-with open(test_input_path, 'r') as f:
+with open(test_input_path, 'r') as f: #arg.input_file
     input_test = f.read().splitlines()
-with open(test_output_path, 'r') as f:
-    output_test = f.read().splitlines()
+#with open(test_output_path, 'r') as f:
+#    output_test = f.read().splitlines()
 
 
-'''
 # Run through test set
+print('')
+print('Parsing input ...')
+print('')
+
+t1 = time.time()
 tests = []
-for i, sentence in enumerate(input_test):
-    print(i)
-    tests.append(CYK.parse_sentence(sentence))
-'''
-
-
-# Evalb
-
-gold = output_test[0][2:-1]
-test = CYK.parse_sentence(input_test[0])[2:-1]
-
-gold_tree = parser.create_from_bracket_string(gold)
-test_tree = parser.create_from_bracket_string(test[:-2])
-#test_tree = parser.create_from_bracket_string(test[:-2])
-
-result = scorer.Scorer().score_trees(gold_tree, test_tree)
-
-print('Recall =' + str(result.recall))
-print('Precision =' + str(result.prec))
-
-'''
-gold_path = 'gold_corpus.txt'
-test_path = 'test_corpus.txt'
-result_path = 'result.txt'
-
-scorer.evalb(gold_path, test_path, result_path)
-'''
+for i, sentence in enumerate(input_test[:10]):
+    
+    print("parsing sentence " + str(i+1) + " over " + str(len(input_test[:10])))
+    out_parsing = CYK.parse_sentence(sentence)
+    tests.append(out_parsing)
+    with open('../output/parsed_test', 'a') as f: #arg.output_file
+        if out_parsing == None:
+            f.write("No parsing found" + "\n")
+        else:
+            f.write(out_parsing + "\n")
+t2 = time.time()
+print('')
+print('Input parsed !')
+print('Took {:.2f} minutes to parse'.format((t2 - t1)/60))

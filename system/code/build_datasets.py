@@ -8,8 +8,8 @@ Created on Wed Feb 26 21:44:35 2020
 import re
 
 # Read data
-with open("data/sequoia-corpus", 'r') as f:
-    data = f.read().splitlines()
+with open("../data/sequoia-corpus", 'r') as f:
+    data = f.readlines()
 
 # ignore functional labels for sparsity issue
 for i in range(len(data)):
@@ -32,11 +32,15 @@ input_test = token_list[int(.9*len(data)):]
 output_test = data[int(.9*len(data)):]
 
 # Write data
-data = [input_train, output_train, input_dev, output_dev,
-        input_test, output_test]
-files = ["input_train", "output_train", "input_dev", "output_dev",
-         "input_test", "output_test"]
-for i in range(len(data)):
-    with open('data/' + files[i], 'w') as f:
-        for item in data[i]:
+data_input = [input_train, input_dev, input_test]
+data_output = [output_train, output_dev, output_test]
+files_input = ["input_train", "input_dev", "input_test"]
+files_output = ["output_train", "output_dev", "output_test"]
+for i in range(len(data_input)):
+    with open('../data/' + files_input[i], 'w') as f:
+        for item in data_input[i]:
             f.write("%s\n" % item)
+for i in range(len(data_output)):
+    with open('../data/' + files_output[i], 'w') as f:
+        for item in data_output[i]:
+            f.write(item)
