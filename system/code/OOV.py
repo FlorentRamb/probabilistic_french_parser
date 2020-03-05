@@ -27,7 +27,6 @@ class OOV_module():
         # Read training corpus
         with open(train_corpus_path, 'r') as f:
             self.input_train = f.read().splitlines()
-            #self.input_train = f.read().lower().splitlines()
         
         # Build vocabulary
         self.voc = list(set([word for sentence in self.input_train for word in sentence.split()]))
@@ -97,7 +96,6 @@ class OOV_module():
             # If unique candidate return it
             if len(words_lv[1]) == 1:
                 return(words_lv[1][0])
-                #return(self.PCFG.POS_from_word(words_lv[1][0]))
             
             # If more than one candidate use language probabilities
             candidate_list = []
@@ -115,7 +113,6 @@ class OOV_module():
             # Sort to get most likely candidates
             candidate_list = sorted(candidate_list, key=itemgetter(1))
             return(candidate_list[-1][0])
-            #return(self.PCFG.POS_from_word(candidate_list[-1][0]))
         
         # Then consider candidates with distance 2
         if len(words_lv[2]) > 0:
@@ -123,7 +120,6 @@ class OOV_module():
             # If unique candidate return it
             if len(words_lv[2]) == 1:
                 return(words_lv[2][0])
-                #return(self.PCFG.POS_from_word(words_lv[2][0]))
             
             # If more than one candidate use language probabilities
             candidate_list = []
@@ -141,7 +137,6 @@ class OOV_module():
             # Sort to get most likely candidate
             candidate_list = sorted(candidate_list, key=itemgetter(1))
             return(candidate_list[-1][0])
-            #return(self.PCFG.POS_from_word(candidate_list[-1][0]))
         
         # If no word in train with levenshtein distance below 2
         # get most similar words in train wrt embeddings
@@ -154,7 +149,6 @@ class OOV_module():
                 candidate_list.append((w, sim))
             candidate_list = sorted(candidate_list, key=itemgetter(1))
             return(candidate_list[-1][0])
-            #return(self.PCFG.POS_from_word(candidate_list[-1][0]))
         
         # If none of these methods is successful return None
         print("OOV failure: did not find any close word for [" + word + "]")

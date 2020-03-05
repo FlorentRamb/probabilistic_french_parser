@@ -113,7 +113,7 @@ class CYK_module():
     def list_to_string(self, parsing_list):
     
         if type(parsing_list) == str:
-            return parsing_list
+            return(parsing_list)
     
         else:
             string = ""
@@ -122,7 +122,7 @@ class CYK_module():
                 parsing_substring = parsing[1]
                 string = string + "(" + root + " " + self.list_to_string(parsing_substring) + ")" + " "
             string = string[:-1]
-            return string
+            return(string)
             
     
     # Parse a sentence to its bracketed form
@@ -135,7 +135,7 @@ class CYK_module():
             self.prob_CYK(tokens)
             id_root = self.PCFG.nonter2id[Nonterminal('SENT')]
             if self.P[n-1][0][id_root] == 0: # no valid parsing
-                return None
+                return(None)
             parsing_list = self.recursive_parsing(n-1, 0, id_root, tokens)
     
         else:
@@ -148,18 +148,17 @@ class CYK_module():
             else:
                 nt = self.PCFG.POS_from_word(candidate)
                 parsing_list = "(" + nt + " " + tokens[0] + ")"
-        #return(parsing_list)
         
         # Get string from the parsed list
         output = self.list_to_string(parsing_list)
                     
-        # Delete created symbols containing '|' and delete closing brackets
-        #output = re.sub('\|[^>]+>', '', output)
         if cor1:
-            # remove pattern + opening bracket
-            output = re.sub(r'([^\s]+)+\|+([^\s]+)', '', output)
-            # remove extra white spaces
-            output = re.sub(' +', ' ', output)
+            # Multiple nonterminals correction
+            # remove opening bracket + pattern
+            #output = re.sub(r'([^\s]+)+\|+([^\s]+)', '', output)
+            # remove opening bracket + pattern if it is followed by an opening bracket
+            output = re.sub(r'([^\s]+)(\|)(<)([A-Za-z\+\&]+)(>)(\s)(?=\()', '', output)
+            output = re.sub(' +', ' ', output) # remove extra white spaces
             count_close = 0
             count_open = 0
             i=0
@@ -175,7 +174,10 @@ class CYK_module():
                 else:
                     i += 1
         
-       # Correct merge due to unit rool : (A&&B w) -> (A (B w))
+        # Delete what comes after '|' for POS-tags
+        output = re.sub('\|[^>]+>', '', output)
+                    
+        # Correct merge due to unit rool : (A&&B w) -> (A (B w))
         if cor2:
             count = 0
             for i in range(2, len(output)):
@@ -204,4 +206,4 @@ class CYK_module():
                 else:
                     i += 1
         
-        return "( (SENT " + output + "))"
+        return("( (SENT " + output + "))")

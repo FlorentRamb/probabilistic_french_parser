@@ -22,21 +22,21 @@ bracketed_corpus_path = '../data/output_train'
 train_corpus_path = '../data/input_train'
 embeddings_path = '../data/polyglot-fr.pkl'
 test_input_path = '../data/input_test'
-# test_output_path = '../data/output_test'
-
 
 # Build CYK
 CYK = CYK_module(bracketed_corpus_path,
                  train_corpus_path,
                  embeddings_path)
 
+# Grammar description
+print('')
+print('Number of nonterminals ' + str(len(CYK.PCFG.nonterminals)))
+print('')
+print('Number of grammar rules ' + str(len(CYK.PCFG.grammar_trees)))
 
 # Read test data
 with open(test_input_path, 'r') as f: #arg.input_file
     input_test = f.read().splitlines()
-#with open(test_output_path, 'r') as f:
-#    output_test = f.read().splitlines()
-
 
 # Run through test set
 print('')
@@ -45,9 +45,9 @@ print('')
 
 t1 = time.time()
 tests = []
-for i, sentence in enumerate(input_test[:10]):
+for i, sentence in enumerate(input_test):
     
-    print("parsing sentence " + str(i+1) + " over " + str(len(input_test[:10])))
+    print("parsing sentence " + str(i+1) + " over " + str(len(input_test)))
     out_parsing = CYK.parse_sentence(sentence)
     tests.append(out_parsing)
     with open('../output/parsed_test', 'a') as f: #arg.output_file
