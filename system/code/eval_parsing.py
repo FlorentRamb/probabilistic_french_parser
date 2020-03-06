@@ -38,7 +38,7 @@ for gold, test, sent in zip(test_output, parsed_output, test_input):
             test_tree = parser.create_from_bracket_string(test[2:-1])
             result = scorer.Scorer().score_trees(gold_tree, test_tree)
             
-            len_sentence = len(sent)
+            len_sentence = len(sent.split())
             lengths.append(len_sentence)
             print('')
             print('Sentence length: ' + str(len(gold)))

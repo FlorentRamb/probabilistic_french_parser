@@ -62,7 +62,7 @@ class CYK_module():
                     else:
                         candidate = self.OOV.oov_word(tokens[i])
             
-            # If no token was found using oov module give uniform proba
+            # If no token was found using OOV module give uniform proba
             if candidate == None:
                 self.P[0,i,:] = 1/n_symbol
             
@@ -154,15 +154,13 @@ class CYK_module():
                     
         if cor1:
             # Multiple nonterminals correction
-            # remove opening bracket + pattern
-            #output = re.sub(r'([^\s]+)+\|+([^\s]+)', '', output)
             # remove opening bracket + pattern if it is followed by an opening bracket
             output = re.sub(r'([^\s]+)(\|)(<)([A-Za-z\+\&]+)(>)(\s)(?=\()', '', output)
             output = re.sub(' +', ' ', output) # remove extra white spaces
             count_close = 0
             count_open = 0
             i=0
-            #delete extra cloing brackets
+            # Delete extra cloing brackets
             while i < len(output):                
                 if output[i] == '(':
                     count_open += 1
@@ -194,7 +192,7 @@ class CYK_module():
             count_close = 0
             count_open = 0
             i=0
-            #delete extra cloing brackets
+            # Delete extra cloing brackets
             while i < len(output):                
                 if output[i] == '(':
                     count_open += 1
