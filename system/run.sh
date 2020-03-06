@@ -1,2 +1,2 @@
 #!/bin/sh
-python code/main.py "$@"
+python ./code/main.py "$@"
